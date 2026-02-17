@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Mail\BookingNotification;
 use App\Models\Booking;
 use App\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class BookingController extends Controller
 {
@@ -33,10 +35,12 @@ class BookingController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'room_id' => 'required|uuid|exists:rooms,id',
-            'title'   => 'required|string|min:3',
-            'start'   => 'required|date|after:now',
-            'end'     => 'required|date|after:start',
+            'room_id'      => 'required|uuid|exists:rooms,id',
+            'name'         => 'required|string|max:255', 
+            'phone_number' => 'required|numeric',        
+            'title'        => 'required|string|min:3',
+            'start'        => 'required|date|after:now',
+            'end'          => 'required|date|after:start',
         ]);
         
         $startTime = Carbon::parse($request->start);
@@ -60,14 +64,19 @@ class BookingController extends Controller
             return back()->with('error', 'Jadwal sudah terisi, silakan pilih jam lain.');
         }
 
-        Booking::create([
-            'user_id'    => auth()->id(),
-            'room_id'    => $request->room_id,
-            'title'      => $request->title,
-            'start_time' => $startForDb,
-            'end_time'   => $endForDb,
-            'status'     => 'pending',
+        $booking = Booking::create([
+            'name'         => $request->name,
+            'phone_number' => $request->phone_number,
+            'room_id'      => $request->room_id,
+            'title'        => $request->title,
+            'start_time'   => $startForDb,
+            'end_time'     => $endForDb,
+            'status'       => 'pending',
         ]);
+
+        $booking->load('room');
+
+        Mail::to('bagassurahman2@gmail.com')->send(new BookingNotification($booking));
 
         return back()->with('success', 'Booking berhasil diajukan! Menunggu persetujuan admin.');
     }

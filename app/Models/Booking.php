@@ -15,7 +15,7 @@ class Booking extends Model
     protected $keyType = 'string';
     public $incrementing = false;
     
-    protected $fillable = ['user_id', 'room_id', 'title', 'start_time', 'end_time', 'status'];
+    protected $fillable = ['name', 'phone_number','user_id', 'room_id', 'title', 'start_time', 'end_time', 'status'];
 
     public function user() 
     { 
